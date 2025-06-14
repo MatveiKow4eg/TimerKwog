@@ -1,4 +1,3 @@
-
 const firebaseConfig = {
   apiKey: "AIzaSyDxYwWxD_f8e19HwxVqx7McqdE1miW7j5I",
   authDomain: "kwog-24c4c.firebaseapp.com",
@@ -19,9 +18,8 @@ function formatTime(seconds) {
   return `${m}:${s}`;
 }
 
-
-// --- Для страницы участника ---
-if(document.getElementById("startBtn")) {
+// --- Участник ---
+if (document.getElementById("startBtn")) {
   const userNumberInput = document.getElementById("userNumber");
   const startBtn = document.getElementById("startBtn");
   const timerContainer = document.getElementById("timerContainer");
@@ -63,21 +61,16 @@ if(document.getElementById("startBtn")) {
       currentNumber = num;
       localStorage.setItem("userNumber", num);
 
-     db.ref("timers").once("value").then(all => {
-  const allTimers = all.val() || {};
-  if (!allTimers[num]) {
-    alert("Этот номер был удалён администратором.");
-    localStorage.removeItem("userNumber");
-    location.reload();
-    return;
-  }
+      db.ref(`timers/${num}`).set({
+        timeLeft: 600,
+        isPaused: true
+      });
 
-  timerContainer.style.display = "block";
-  startBtn.disabled = true;
-  userNumberInput.disabled = true;
-  listenTimer();
-});
-
+      timerContainer.style.display = "block";
+      startBtn.disabled = true;
+      userNumberInput.disabled = true;
+      listenTimer();
+    });
   };
 
   function autoStart(num) {
@@ -101,7 +94,7 @@ if(document.getElementById("startBtn")) {
   }
 
   function listenTimer() {
-    db.ref(`timers/${}currentNumber}`).on("value", snap => {
+    db.ref(`timers/${currentNumber}`).on("value", snap => {
       const data = snap.val();
       if (!data) return;
       timerDisplay.textContent = formatTime(data.timeLeft);
@@ -110,7 +103,7 @@ if(document.getElementById("startBtn")) {
 
       if (!data.isPaused) {
         timerInterval = setInterval(() => {
-          db.ref(`timers/${}currentNumber}`).transaction(timer => {
+          db.ref(`timers/${currentNumber}`).transaction(timer => {
             if (timer && timer.timeLeft > 0) {
               timer.timeLeft--;
             }
@@ -129,8 +122,8 @@ if(document.getElementById("startBtn")) {
   }
 }
 
-// --- Для страницы админа ---
-if(document.getElementById("usersTable")) {
+// --- Админ ---
+if (document.getElementById("usersTable")) {
   const usersTable = document.getElementById("usersTable");
   const pauseAllBtn = document.getElementById("pauseAllBtn");
   let allPaused = false;
@@ -145,7 +138,7 @@ if(document.getElementById("usersTable")) {
       if (timeLeft === 0) color = "red";
       else if (timeLeft < 300) color = "yellow";
 
-      const indicator = `<span class="indicator ${}color}"></span>`;
+      const indicator = `<span class="indicator ${color}"></span>`;
       const isPaused = data[user].isPaused;
       const pauseText = isPaused ? "▶" : "⏸";
 
@@ -153,16 +146,16 @@ if(document.getElementById("usersTable")) {
       card.className = "card";
       card.innerHTML = `
         <div class="info">
-          <div>${}indicator}<strong>Участник ${}user}</strong></div>
-          <div>Осталось: ${}formatTime(timeLeft)}</div>
+          <div>${indicator}<strong>Участник ${user}</strong></div>
+          <div>Осталось: ${formatTime(timeLeft)}</div>
         </div>
         <div class="actions">
-          <button class="delete" data-user="${}user}">❌</button>
-          <button class="rename" data-user="${}user}">✏</button>
-          <button class="pause" data-user="${}user}">${}pauseText}</button>
-          <button class="add30" data-user="${}user}">+30</button>
-          <button class="sub30" data-user="${}user}">-30</button>
-          <button class="reset" data-user="${}user}">🔄</button>
+          <button class="delete" data-user="${user}">❌</button>
+          <button class="rename" data-user="${user}">✏</button>
+          <button class="pause" data-user="${user}">${pauseText}</button>
+          <button class="add30" data-user="${user}">+30</button>
+          <button class="sub30" data-user="${user}">-30</button>
+          <button class="reset" data-user="${user}">🔄</button>
         </div>
       `;
       usersTable.appendChild(card);
@@ -171,7 +164,7 @@ if(document.getElementById("usersTable")) {
     document.querySelectorAll(".delete").forEach(btn => {
       btn.onclick = () => {
         const user = btn.dataset.user;
-        db.ref(`timers/${}user}`).remove();
+        db.ref(`timers/${user}`).remove();
       };
     });
 
@@ -187,16 +180,16 @@ if(document.getElementById("usersTable")) {
 
         if (newUser === oldUser) return;
 
-        db.ref(`timers/${}newUser}`).once("value").then(snap => {
+        db.ref(`timers/${newUser}`).once("value").then(snap => {
           if (snap.exists()) {
             alert("Такой номер уже используется!");
             return;
           }
 
-          db.ref(`timers/${}oldUser}`).once("value").then(dataSnap => {
+          db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
             const data = dataSnap.val();
-            db.ref(`timers/${}newUser}`).set(data);
-            db.ref(`timers/${}oldUser}`).remove();
+            db.ref(`timers/${newUser}`).set(data);
+            db.ref(`timers/${oldUser}`).remove();
           });
         });
       };
@@ -205,9 +198,9 @@ if(document.getElementById("usersTable")) {
     document.querySelectorAll(".pause").forEach(btn => {
       btn.onclick = () => {
         const user = btn.dataset.user;
-        db.ref(`timers/${}user}/isPaused`).once("value").then(snap => {
+        db.ref(`timers/${user}/isPaused`).once("value").then(snap => {
           const current = snap.val();
-          db.ref(`timers/${}user}/isPaused`).set(!current);
+          db.ref(`timers/${user}/isPaused`).set(!current);
         });
       };
     });
@@ -215,10 +208,8 @@ if(document.getElementById("usersTable")) {
     document.querySelectorAll(".add30").forEach(btn => {
       btn.onclick = () => {
         const user = btn.dataset.user;
-        db.ref(`timers/${}user}`).transaction(timer => {
-          if (timer) {
-            timer.timeLeft += 30;
-          }
+        db.ref(`timers/${user}`).transaction(timer => {
+          if (timer) timer.timeLeft += 30;
           return timer;
         });
       };
@@ -227,10 +218,8 @@ if(document.getElementById("usersTable")) {
     document.querySelectorAll(".sub30").forEach(btn => {
       btn.onclick = () => {
         const user = btn.dataset.user;
-        db.ref(`timers/${}user}`).transaction(timer => {
-          if (timer) {
-            timer.timeLeft = Math.max(0, timer.timeLeft - 30);
-          }
+        db.ref(`timers/${user}`).transaction(timer => {
+          if (timer) timer.timeLeft = Math.max(0, timer.timeLeft - 30);
           return timer;
         });
       };
@@ -240,7 +229,7 @@ if(document.getElementById("usersTable")) {
       btn.onclick = () => {
         const user = btn.dataset.user;
         if (confirm("Вы уверены, что хотите сбросить таймер участника до 10 минут?")) {
-          db.ref(`timers/${}user}`).set({
+          db.ref(`timers/${user}`).set({
             timeLeft: 600,
             isPaused: true
           });
@@ -254,7 +243,7 @@ if(document.getElementById("usersTable")) {
     db.ref("timers").once("value").then(snap => {
       const timers = snap.val() || {};
       for (const user in timers) {
-        db.ref(`timers/${}user}/isPaused`).set(allPaused);
+        db.ref(`timers/${user}/isPaused`).set(allPaused);
       }
     });
     pauseAllBtn.textContent = allPaused ? "Старт всем" : "Пауза всем";
