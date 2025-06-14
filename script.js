@@ -1,6 +1,6 @@
 const firebaseConfig = {
   apiKey: "AIzaSyDxYwWxD_f8e19HwxVqx7McqdE1miW7j5I",
-  authDomain: "kwog-24db.ref(`timers/${oldUser}`)c4c.firebaseapp.com",
+  authDomain: "kwog-24c4c.firebaseapp.com",
   databaseURL: "https://kwog-24c4c-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "kwog-24c4c",
   storageBucket: "kwog-24c4c.appspot.com",
@@ -18,134 +18,100 @@ function formatTime(seconds) {
   return `${m}:${s}`;
 }
 
-// --- Участник ---
+// === Участник ===
 if (document.getElementById("startBtn")) {
   const userNumberInput = document.getElementById("userNumber");
   const startBtn = document.getElementById("startBtn");
   const timerContainer = document.getElementById("timerContainer");
   const timerDisplay = document.getElementById("timer");
+  const userLabel = document.getElementById("userLabel");
+  const userIdDisplay = document.getElementById("userIdDisplay");
 
   let timerInterval = null;
   let currentNumber = null;
   let timeExpiredNotified = false;
 
   const savedNumber = localStorage.getItem("userNumber");
-  if (savedNumber) {
-    autoStart(savedNumber);
-  }
+  if (savedNumber) autoStart(savedNumber);
 
-startBtn.onclick = () => {
-  const num = userNumberInput.value.trim();
-  if (!/^\d+$/.test(num)) {
-    alert("Только цифры!");
-    return;
-  }
-
-  if (parseInt(num) < 1 || parseInt(num) > 60) {
-    alert("Можно вводить только номер от 1 до 60!");
-    return;
-  }
-
-  db.ref("timers").once("value").then(all => {
-    const allTimers = all.val() || {};
-    if (Object.keys(allTimers).length >= 60) {
-      alert("Максимум 60 участников уже добавлено!");
+  startBtn.onclick = () => {
+    const num = userNumberInput.value.trim();
+    if (!/^[0-9]+$/.test(num) || parseInt(num) < 1 || parseInt(num) > 60) {
+      alert("Введите номер от 1 до 60!");
       return;
     }
 
-    if (allTimers[num]) {
-      alert("Этот номер уже используется!");
-      return;
-    }
+    db.ref("timers").once("value").then(all => {
+      const allTimers = all.val() || {};
+      if (Object.keys(allTimers).length >= 60) {
+        alert("Максимум 60 участников!");
+        return;
+      }
 
-    currentNumber = num;
-    localStorage.setItem("userNumber", num);
+      if (allTimers[num]) {
+        alert("Этот номер уже используется!");
+        return;
+      }
 
-    db.ref(`timers/${num}`).set({
-      timeLeft: 600,
-      isPaused: true
+      currentNumber = num;
+      localStorage.setItem("userNumber", num);
+
+      db.ref(`timers/${num}`).set({
+        timeLeft: 600,
+        isPaused: true
+      });
+
+      userNumberInput.style.display = "none";
+      startBtn.style.display = "none";
+      document.querySelector("h2").style.display = "none";
+      userLabel.style.display = "block";
+      userIdDisplay.textContent = num;
+      timerContainer.style.display = "block";
+
+      listenTimer();
     });
+  };
 
-    // 👇 Показываем номер, скрываем форму
-    document.getElementById("userLabel").style.display = "block";
-    document.getElementById("userIdDisplay").textContent = num;
-    userNumberInput.style.display = "none";
-    startBtn.style.display = "none";
-    document.querySelector("h2").style.display = "none";
-
-    timerContainer.style.display = "block";
-    listenTimer();
-  });
-};
-
-function autoStart(num) {
-  currentNumber = num;
-  localStorage.setItem("userNumber", num);
-
-  db.ref("timers").once("value").then(all => {
-    const allTimers = all.val() || {};
-
-    // ✅ Если таймера уже нет — возможно, нас переименовали
-    if (!allTimers[num]) {
-      // Ищем по всей базе: кто был переименован в num
-      const match = Object.entries(allTimers).find(
-        ([_, value]) => value.renamedTo === num
-      );
-
-      if (match) {
-        const [newNum] = match;
-        console.log(`Восстановление: ${num} → ${newNum}`);
-        localStorage.setItem("userNumber", newNum);
+  function autoStart(num) {
+    currentNumber = num;
+    db.ref("timers").once("value").then(all => {
+      const allTimers = all.val() || {};
+      if (!allTimers[num]) {
+        const match = Object.entries(allTimers).find(([_, val]) => val.renamedTo === num);
+        if (match) {
+          const [newNum] = match;
+          localStorage.setItem("userNumber", newNum);
+          location.reload();
+          return;
+        }
+        alert("Этот номер удалён администратором.");
+        localStorage.removeItem("userNumber");
         location.reload();
         return;
       }
 
-      // 💥 Реально удалён
-      alert("Этот номер был удалён администратором.");
-      localStorage.removeItem("userNumber");
-      location.reload();
-      return;
-    }
+      userNumberInput.style.display = "none";
+      startBtn.style.display = "none";
+      document.querySelector("h2").style.display = "none";
+      userLabel.style.display = "block";
+      userIdDisplay.textContent = num;
+      timerContainer.style.display = "block";
 
-    // 👇 Показываем номер, скрываем форму
-    document.getElementById("userLabel").style.display = "block";
-    document.getElementById("userIdDisplay").textContent = num;
-    userNumberInput.style.display = "none";
-    startBtn.style.display = "none";
-    document.querySelector("h2").style.display = "none";
+      listenTimer();
 
-    timerContainer.style.display = "block";
-    listenTimer();
-
-    // ✅ Также следим: может переименуют прямо сейчас
-db.ref(`timers/${num}`).on("value", (snap) => {
-  const data = snap.val();
-  if (!data) return;
-
-  if (data.renamedTo) {
-    const currentStored = localStorage.getItem("userNumber");
-
-    // если renamedTo совпадает с текущим localStorage, мы уже на новом номере
-    if (data.renamedTo === currentStored) {
-      // очистим, чтобы не повторялось
-      db.ref(`timers/${num}/renamedTo`).remove();
-      console.log("✅ renamedTo очищен, участник уже переехал.");
-      return;
-    }
-
-    // иначе — это новое переназначение
-    console.log(`Переименование: ${num} → ${data.renamedTo}`);
-    localStorage.setItem("userNumber", data.renamedTo);
-    location.reload();
+      db.ref(`timers/${num}`).on("value", (snap) => {
+        const data = snap.val();
+        if (data?.renamedTo) {
+          if (localStorage.getItem("userNumber") !== data.renamedTo) {
+            localStorage.setItem("userNumber", data.renamedTo);
+            location.reload();
+          } else {
+            db.ref(`timers/${num}/renamedTo`).remove();
+          }
+        }
+      });
+    });
   }
-});
-
-
-  });
-}
-
-
-
 
   function listenTimer() {
     db.ref(`timers/${currentNumber}`).on("value", snap => {
@@ -153,19 +119,15 @@ db.ref(`timers/${num}`).on("value", (snap) => {
       if (!data) return;
       timerDisplay.textContent = formatTime(data.timeLeft);
 
-      if (timerInterval) clearInterval(timerInterval);
+      clearInterval(timerInterval);
 
       if (!data.isPaused) {
         timerInterval = setInterval(() => {
           db.ref(`timers/${currentNumber}`).transaction(timer => {
-            if (timer && timer.timeLeft > 0) {
-              timer.timeLeft--;
-            }
+            if (timer && timer.timeLeft > 0) timer.timeLeft--;
             return timer;
           });
         }, 1000);
-      } else {
-        clearInterval(timerInterval);
       }
 
       if (data.timeLeft === 0 && !timeExpiredNotified) {
@@ -176,7 +138,7 @@ db.ref(`timers/${num}`).on("value", (snap) => {
   }
 }
 
-// --- Админ ---
+// === Админ ===
 if (document.getElementById("usersTable")) {
   const usersTable = document.getElementById("usersTable");
   const pauseAllBtn = document.getElementById("pauseAllBtn");
@@ -227,7 +189,7 @@ if (document.getElementById("usersTable")) {
         const oldUser = btn.dataset.user;
         const newUser = prompt("Введите новый номер (1–60):", oldUser);
 
-        if (!/^\d+$/.test(newUser) || parseInt(newUser) < 1 || parseInt(newUser) > 60) {
+        if (!/^[0-9]+$/.test(newUser) || parseInt(newUser) < 1 || parseInt(newUser) > 60) {
           alert("Недопустимый номер!");
           return;
         }
@@ -240,19 +202,12 @@ if (document.getElementById("usersTable")) {
             return;
           }
 
-db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
-  const data = dataSnap.val();
-  if (!data) return;
-
-  // ✅ Указываем, что это ПЕРЕИМЕНОВАННЫЙ номер
-  db.ref(`timers/${newUser}`).set({
-    ...data,
-    renamedTo: oldUser
-  });
-
-  db.ref(`timers/${oldUser}`).remove();
-});
-
+          db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
+            const data = dataSnap.val();
+            if (!data) return;
+            db.ref(`timers/${newUser}`).set({ ...data, renamedTo: oldUser });
+            db.ref(`timers/${oldUser}`).remove();
+          });
         });
       };
     });
@@ -261,8 +216,7 @@ db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
       btn.onclick = () => {
         const user = btn.dataset.user;
         db.ref(`timers/${user}/isPaused`).once("value").then(snap => {
-          const current = snap.val();
-          db.ref(`timers/${user}/isPaused`).set(!current);
+          db.ref(`timers/${user}/isPaused`).set(!snap.val());
         });
       };
     });
