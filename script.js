@@ -101,6 +101,15 @@ function autoStart(num) {
     timerContainer.style.display = "block";
     listenTimer();
   });
+
+  // ✅ Следим за переименованием
+  db.ref(`timers/${num}`).on("value", (snap) => {
+    const data = snap.val();
+    if (data && data.renamedTo && data.renamedTo !== num) {
+      localStorage.setItem("userNumber", data.renamedTo);
+      location.reload(); // автоматически подключится к новому номеру
+    }
+  });
 }
 
 
