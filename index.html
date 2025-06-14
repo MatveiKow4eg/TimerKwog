@@ -14,23 +14,32 @@
       background: #000;
       color: white;
       overflow: hidden;
+      position: relative;
     }
-.background-image {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  z-index: 0; /* Не -1! */
-  opacity: 0.3;
-  pointer-events: none;
-}
 
-.container {
-  position: relative; /* ВАЖНО! */
-  z-index: 1;
-}
+    .background-image {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: 0;
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+    }
+
     .logo {
       width: 160px;
       height: 160px;
@@ -87,7 +96,7 @@
   </style>
 </head>
 <body>
- <img src="background-stars.png" class="background-image" alt="space background" />
+  <img src="background-stars.png" class="background-image" alt="space background" />
 
   <div class="container">
     <object data="kovcheg-logo.svg" type="image/svg+xml" class="logo"></object>
