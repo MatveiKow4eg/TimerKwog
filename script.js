@@ -197,11 +197,16 @@ if (document.getElementById("usersTable")) {
             return;
           }
 
-          db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
-            const data = dataSnap.val();
-            db.ref(`timers/${newUser}`).set(data);
-            db.ref(`timers/${oldUser}`).remove();
-          });
+db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
+  const data = dataSnap.val();
+  if (!data) return;
+
+  // 👇 добавим флаг переименования
+  data.renamedTo = newUser;
+
+  db.ref(`timers/${newUser}`).set(data);
+  db.ref(`timers/${oldUser}`).remove();
+});
         });
       };
     });
