@@ -3,8 +3,9 @@
 const firebaseConfig = {
   apiKey: "AIzaSyDxYwWxD_f8e19HwxVqx7McqdE1miW7j5I",
   authDomain: "kwog-24c4c.firebaseapp.com",
+  **databaseURL: "https://kwog-24c4c-default-rtdb.europe-west1.firebasedatabase.app",**
   projectId: "kwog-24c4c",
-  storageBucket: "kwog-24c4c.firebasestorage.app",
+  storageBucket: "kwog-24c4c.appspot.com",
   messagingSenderId: "75932550486",
   appId: "1:75932550486:web:7a831988dfdf6d6ef542f7",
   measurementId: "G-860L10K2NS"
