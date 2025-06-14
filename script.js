@@ -34,64 +34,75 @@ if (document.getElementById("startBtn")) {
     autoStart(savedNumber);
   }
 
-  startBtn.onclick = () => {
-    const num = userNumberInput.value.trim();
-    if (!/^\d+$/.test(num)) {
-      alert("Только цифры!");
+startBtn.onclick = () => {
+  const num = userNumberInput.value.trim();
+  if (!/^\d+$/.test(num)) {
+    alert("Только цифры!");
+    return;
+  }
+
+  if (parseInt(num) < 1 || parseInt(num) > 60) {
+    alert("Можно вводить только номер от 1 до 60!");
+    return;
+  }
+
+  db.ref("timers").once("value").then(all => {
+    const allTimers = all.val() || {};
+    if (Object.keys(allTimers).length >= 60) {
+      alert("Максимум 60 участников уже добавлено!");
       return;
     }
 
-    if (parseInt(num) < 1 || parseInt(num) > 60) {
-      alert("Можно вводить только номер от 1 до 60!");
+    if (allTimers[num]) {
+      alert("Этот номер уже используется!");
       return;
     }
 
-    db.ref("timers").once("value").then(all => {
-      const allTimers = all.val() || {};
-      if (Object.keys(allTimers).length >= 60) {
-        alert("Максимум 60 участников уже добавлено!");
-        return;
-      }
-
-      if (allTimers[num]) {
-        alert("Этот номер уже используется!");
-        return;
-      }
-
-      currentNumber = num;
-      localStorage.setItem("userNumber", num);
-
-      db.ref(`timers/${num}`).set({
-        timeLeft: 600,
-        isPaused: true
-      });
-
-      timerContainer.style.display = "block";
-      startBtn.disabled = true;
-      userNumberInput.disabled = true;
-      listenTimer();
-    });
-  };
-
-  function autoStart(num) {
     currentNumber = num;
     localStorage.setItem("userNumber", num);
 
-    db.ref("timers").once("value").then(all => {
-      const allTimers = all.val() || {};
-      if (!allTimers[num]) {
-        alert("Этот номер был удалён администратором.");
-        localStorage.removeItem("userNumber");
-        location.reload();
-        return;
-      }
-
-      timerContainer.style.display = "block";
-      startBtn.disabled = true;
-      userNumberInput.disabled = true;
-      listenTimer();
+    db.ref(`timers/${num}`).set({
+      timeLeft: 600,
+      isPaused: true
     });
-  }
+
+    // 👇 Показываем номер, скрываем форму
+    document.getElementById("userLabel").style.display = "block";
+    document.getElementById("userIdDisplay").textContent = num;
+    userNumberInput.style.display = "none";
+    startBtn.style.display = "none";
+    document.querySelector("h2").style.display = "none";
+
+    timerContainer.style.display = "block";
+    listenTimer();
+  });
+};
+
+function autoStart(num) {
+  currentNumber = num;
+  localStorage.setItem("userNumber", num);
+
+  db.ref("timers").once("value").then(all => {
+    const allTimers = all.val() || {};
+    if (!allTimers[num]) {
+      alert("Этот номер был удалён администратором.");
+      localStorage.removeItem("userNumber");
+      location.reload();
+      return;
+    }
+
+    // 👇 Показываем номер, скрываем форму
+    document.getElementById("userLabel").style.display = "block";
+    document.getElementById("userIdDisplay").textContent = num;
+    userNumberInput.style.display = "none";
+    startBtn.style.display = "none";
+    document.querySelector("h2").style.display = "none";
+
+    timerContainer.style.display = "block";
+    listenTimer();
+  });
+}
+
 
   function listenTimer() {
     db.ref(`timers/${currentNumber}`).on("value", snap => {
