@@ -84,12 +84,23 @@ function autoStart(num) {
 
   db.ref("timers").once("value").then(all => {
     const allTimers = all.val() || {};
-    if (!allTimers[num]) {
-      alert("Этот номер был удалён администратором.");
-      localStorage.removeItem("userNumber");
-      location.reload();
-      return;
-    }
+  if (!allTimers[num]) {
+  // ⚠ номер удалён — ищем, может он переехал в renamedTo
+  const possibleNew = Object.entries(allTimers).find(([key, value]) => value.renamedTo === num);
+  if (possibleNew) {
+    const [newNum] = possibleNew;
+    console.log(`Переход с ${num} → ${newNum} (по renamedTo)`);
+    localStorage.setItem("userNumber", newNum);
+    location.reload();
+    return;
+  }
+
+  // 💥 если ничего не найдено — реально удалён
+  alert("Этот номер был удалён администратором.");
+  localStorage.removeItem("userNumber");
+  location.reload();
+  return;
+}
 
     // 👇 Показываем номер, скрываем ввод
     document.getElementById("userLabel").style.display = "block";
