@@ -192,10 +192,12 @@ if(document.getElementById("usersTable")) {
     document.querySelectorAll(".reset").forEach(btn => {
       btn.onclick = () => {
         const user = btn.dataset.user;
-        db.ref(`timers/${user}`).set({
-          timeLeft: 600,
-          isPaused: true
-        });
+        if (confirm("Вы уверены, что хотите сбросить таймер участника до 10 минут?")) {
+          db.ref(`timers/${user}`).set({
+            timeLeft: 600,
+            isPaused: true
+          });
+        }
       };
     });
   });
