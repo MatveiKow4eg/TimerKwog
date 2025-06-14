@@ -1,6 +1,6 @@
 const firebaseConfig = {
   apiKey: "AIzaSyDxYwWxD_f8e19HwxVqx7McqdE1miW7j5I",
-  authDomain: "kwog-24c4c.firebaseapp.com",
+  authDomain: "kwog-24db.ref(`timers/${oldUser}`)c4c.firebaseapp.com",
   databaseURL: "https://kwog-24c4c-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "kwog-24c4c",
   storageBucket: "kwog-24c4c.appspot.com",
@@ -229,12 +229,15 @@ db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
   const data = dataSnap.val();
   if (!data) return;
 
-  // 👇 добавим флаг переименования
-  data.renamedTo = newUser;
+  // ✅ Указываем, что это ПЕРЕИМЕНОВАННЫЙ номер
+  db.ref(`timers/${newUser}`).set({
+    ...data,
+    renamedTo: oldUser
+  });
 
-  db.ref(`timers/${newUser}`).set(data);
   db.ref(`timers/${oldUser}`).remove();
 });
+
         });
       };
     });
