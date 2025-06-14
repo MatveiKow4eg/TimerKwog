@@ -206,12 +206,18 @@ if (document.getElementById("usersTable")) {
             return;
           }
 
-          db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
-            const data = dataSnap.val();
-            if (!data) return;
-            db.ref(`timers/${newUser}`).set({ ...data, renamedTo: oldUser });
-            db.ref(`timers/${oldUser}`).remove();
-          });
+db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
+  const data = dataSnap.val();
+  if (!data) return;
+
+  // добавляем флаг "я был переименован в"
+  db.ref(`timers/${newUser}`).set({
+    ...data,
+    renamedTo: oldUser
+  });
+
+  db.ref(`timers/${oldUser}`).remove();
+});
         });
       };
     });
