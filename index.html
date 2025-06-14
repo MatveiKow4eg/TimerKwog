@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -11,6 +10,11 @@
   <h2>Введи свой номер</h2>
   <input type="text" id="userNumber" placeholder="Например: 17">
   <button id="startBtn">Начать таймер</button>
+
+  <!-- 👇 отображение номера участника -->
+  <h3 id="userLabel" style="display:none;">
+    Твой номер: <span id="userIdDisplay"></span>
+  </h3>
 
   <div id="timerContainer" style="display:none;">
     <h3>Твой таймер:</h3>
