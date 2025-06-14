@@ -23,7 +23,6 @@ let currentNumber = null;
 let timerInterval = null;
 let timeExpiredNotified = false;
 
-// Показывает интерфейс таймера
 function showTimerUI(num) {
   currentNumber = num;
   document.getElementById("userIdDisplay").textContent = num;
@@ -35,9 +34,11 @@ function showTimerUI(num) {
 }
 
 function listenTimer() {
+  if (!currentNumber) return;
   db.ref(`timers/${currentNumber}`).on("value", snap => {
     const data = snap.val();
     if (!data) return;
+
     document.getElementById("timer").textContent = formatTime(data.timeLeft);
 
     clearInterval(timerInterval);
@@ -58,34 +59,47 @@ function listenTimer() {
 }
 
 function autoStart(num) {
-  currentNumber = num;
   db.ref("timers").once("value").then(all => {
     const allTimers = all.val() || {};
+
+    // Проверка: если номер отсутствует, возможно был переименован
     if (!allTimers[num]) {
       const renamed = Object.entries(allTimers).find(([_, val]) => val.renamedTo === num);
       if (renamed) {
         const [newNum] = renamed;
         localStorage.setItem("userNumber", newNum);
-        autoStart(newNum);
+        currentNumber = newNum;
+        showTimerUI(newNum);
+        listenTimer();
+        watchRename(newNum);
         return;
       }
 
+      // Реально удалён
       alert("Этот номер был удалён.");
       localStorage.removeItem("userNumber");
       return;
     }
 
+    currentNumber = num;
     showTimerUI(num);
     listenTimer();
+    watchRename(num);
+  });
+}
 
-    db.ref(`timers/${num}`).on("value", snap => {
-      const data = snap.val();
-      if (data && data.renamedTo && data.renamedTo !== num) {
-        db.ref(`timers/${num}/renamedTo`).remove();
-        localStorage.setItem("userNumber", data.renamedTo);
-        autoStart(data.renamedTo);
-      }
-    });
+function watchRename(num) {
+  db.ref(`timers/${num}`).on("value", snap => {
+    const data = snap.val();
+    if (!data) return;
+
+    if (data.renamedTo && data.renamedTo !== num) {
+      db.ref(`timers/${num}/renamedTo`).remove();
+      localStorage.setItem("userNumber", data.renamedTo);
+      currentNumber = data.renamedTo;
+      showTimerUI(currentNumber);
+      listenTimer();
+    }
   });
 }
 
@@ -125,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         showTimerUI(num);
         listenTimer();
+        watchRename(num);
       });
     };
   }
