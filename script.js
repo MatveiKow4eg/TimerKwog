@@ -257,6 +257,6 @@ if (document.getElementById("usersTable")) {
         db.ref(`timers/${user}/isPaused`).set(allPaused);
       }
     });
-    pauseAllBtn.textContent = allPaused ? "Старт всем" : "Пауза всем";
+    pauseAllBtn.innerHTML = allPaused ? "▶ Старт всем" : "⏸ Пауза всем";
   };
 }
