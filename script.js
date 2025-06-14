@@ -72,46 +72,50 @@ if (document.getElementById("startBtn")) {
     });
   };
 
-  function autoStart(num) {
-    currentNumber = num;
-    db.ref("timers").once("value").then(all => {
-      const allTimers = all.val() || {};
-      if (!allTimers[num]) {
-        const match = Object.entries(allTimers).find(([_, val]) => val.renamedTo === num);
-        if (match) {
-          const [newNum] = match;
-          localStorage.setItem("userNumber", newNum);
-          location.reload();
-          return;
-        }
-        alert("Этот номер удалён администратором.");
-        localStorage.removeItem("userNumber");
+function autoStart(num) {
+  currentNumber = num;
+  db.ref("timers").once("value").then(all => {
+    const allTimers = all.val() || {};
+
+    // Проверяем, существует ли таймер
+    if (!allTimers[num]) {
+      const match = Object.entries(allTimers).find(([_, val]) => val.renamedTo === num);
+      if (match) {
+        const [newNum] = match;
+        localStorage.setItem("userNumber", newNum);
         location.reload();
         return;
       }
+      alert("Этот номер удалён администратором.");
+      localStorage.removeItem("userNumber");
+      location.reload();
+      return;
+    }
 
-      userNumberInput.style.display = "none";
-      startBtn.style.display = "none";
-      document.querySelector("h2").style.display = "none";
-      userLabel.style.display = "block";
-      userIdDisplay.textContent = num;
-      timerContainer.style.display = "block";
+    // Показываем интерфейс
+    userNumberInput.style.display = "none";
+    startBtn.style.display = "none";
+    document.querySelector("h2").style.display = "none";
+    userLabel.style.display = "block";
+    userIdDisplay.textContent = num;
+    timerContainer.style.display = "block";
 
-      listenTimer();
+    // Слушаем изменения таймера
+    listenTimer();
 
-      db.ref(`timers/${num}`).on("value", (snap) => {
-  const data = snap.val();
-  if (data && data.renamedTo && data.renamedTo !== num) {
-    localStorage.setItem("userNumber", data.renamedTo);
-    db.ref(`timers/${num}/renamedTo`).remove(); // Удаляем поле, чтобы избежать повторных обновлений
-    location.reload();
-          } else {
-            db.ref(`timers/${num}/renamedTo`).remove();
-          }
-        }
-      });
+    // Следим за переименованием
+    db.ref(`timers/${num}`).on("value", (snap) => {
+      const data = snap.val();
+      if (!data) return;
+
+      if (data.renamedTo && data.renamedTo !== num) {
+        localStorage.setItem("userNumber", data.renamedTo);
+        db.ref(`timers/${num}/renamedTo`).remove(); // Удаляем флаг, чтобы не зациклиться
+        location.reload();
+      }
     });
-  }
+  });
+}
 
   function listenTimer() {
     db.ref(`timers/${currentNumber}`).on("value", snap => {
