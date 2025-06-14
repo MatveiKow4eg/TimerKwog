@@ -132,12 +132,19 @@ if(document.getElementById("usersTable")) {
     const data = snap.val() || {};
     usersTable.innerHTML = "";
     for (const user in data) {
+      const timeLeft = data[user].timeLeft;
+      let color = "green";
+      if (timeLeft === 0) color = "red";
+      else if (timeLeft < 300) color = "yellow";
+
+      const indicator = `<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${color};margin-right:5px;"></span>`;
+
       const tr = document.createElement("tr");
       const isPaused = data[user].isPaused;
       const pauseText = isPaused ? "▶" : "⏸";
       tr.innerHTML = `
-        <td>${user}</td>
-        <td>${formatTime(data[user].timeLeft)}</td>
+        <td>${indicator}${user}</td>
+        <td>${formatTime(timeLeft)}</td>
         <td>
           <button class="delete" data-user="${user}">Удалить</button>
           <button class="rename" data-user="${user}">Переименовать</button>
