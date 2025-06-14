@@ -100,6 +100,9 @@ if(document.getElementById("usersTable")) {
         <td>${user}</td>
         <td>${formatTime(data[user].timeLeft)}</td>
         <td>
+        <button class="delete" data-user="${user}">Удалить</button>
+        <button class="rename" data-user="${user}">Переименовать</button>
+
           <button class="add30" data-user="${user}">+30 сек</button>
           <button class="sub30" data-user="${user}">-30 сек</button>
           <button class="reset" data-user="${user}">Сброс</button>
