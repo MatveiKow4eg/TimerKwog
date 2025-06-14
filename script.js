@@ -60,8 +60,8 @@ if(document.getElementById("startBtn")) {
         userNumberInput.disabled = true;
 
         db.ref(`timers/${currentNumber}`).set({
-          timeLeft: 60,
-          isPaused: false
+          timeLeft: 600,
+          isPaused: true
         });
 
         listenTimer();
