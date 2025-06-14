@@ -1,0 +1,145 @@
+// Твои Firebase-конфиги, вставь сюда свои реальные данные
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+// --- Для страницы участника ---
+if(document.getElementById("startBtn")) {
+  const userNumberInput = document.getElementById("userNumber");
+  const startBtn = document.getElementById("startBtn");
+  const timerContainer = document.getElementById("timerContainer");
+  const timerDisplay = document.getElementById("timer");
+
+  let timerInterval = null;
+  let currentNumber = null;
+
+  startBtn.onclick = () => {
+    const num = userNumberInput.value.trim();
+    if(!/^\d+$/.test(num)) {
+      alert("Только цифры!");
+      return;
+    }
+    currentNumber = num;
+    timerContainer.style.display = "block";
+    startBtn.disabled = true;
+    userNumberInput.disabled = true;
+
+    // Создаем или получаем таймер из базы
+    db.ref(`timers/${currentNumber}`).once("value").then(snapshot => {
+      if(!snapshot.exists()) {
+        db.ref(`timers/${currentNumber}`).set({
+          timeLeft: 60,  // стартовое время 60 секунд
+          isPaused: false
+        });
+      }
+      listenTimer();
+    });
+
+    function listenTimer() {
+      db.ref(`timers/${currentNumber}`).on("value", snap => {
+        const data = snap.val();
+        if(!data) return;
+        timerDisplay.textContent = formatTime(data.timeLeft);
+
+        if(timerInterval) clearInterval(timerInterval);
+
+        if(!data.isPaused) {
+          timerInterval = setInterval(() => {
+            db.ref(`timers/${currentNumber}`).transaction(timer => {
+              if(timer && timer.timeLeft > 0) {
+                timer.timeLeft--;
+              }
+              return timer;
+            });
+          }, 1000);
+        }
+      });
+    }
+  }
+}
+
+// --- Для страницы админа ---
+if(document.getElementById("usersTable")) {
+  const usersTable = document.getElementById("usersTable");
+  const pauseAllBtn = document.getElementById("pauseAllBtn");
+  let allPaused = false;
+
+  db.ref("timers").on("value", snap => {
+    const data = snap.val() || {};
+    usersTable.innerHTML = "";
+    for(const user in data) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${user}</td>
+        <td>${formatTime(data[user].timeLeft)}</td>
+        <td>
+          <button class="add30" data-user="${user}">+30 сек</button>
+          <button class="sub30" data-user="${user}">-30 сек</button>
+          <button class="reset" data-user="${user}">Сброс</button>
+        </td>
+      `;
+      usersTable.appendChild(tr);
+    }
+
+    // Навешиваем обработчики на кнопки
+    document.querySelectorAll(".add30").forEach(btn => {
+      btn.onclick = () => {
+        const user = btn.dataset.user;
+        db.ref(`timers/${user}`).transaction(timer => {
+          if(timer) {
+            timer.timeLeft += 30;
+          }
+          return timer;
+        });
+      }
+    });
+
+    document.querySelectorAll(".sub30").forEach(btn => {
+      btn.onclick = () => {
+        const user = btn.dataset.user;
+        db.ref(`timers/${user}`).transaction(timer => {
+          if(timer) {
+            timer.timeLeft = Math.max(0, timer.timeLeft - 30);
+          }
+          return timer;
+        });
+      }
+    });
+
+    document.querySelectorAll(".reset").forEach(btn => {
+      btn.onclick = () => {
+        const user = btn.dataset.user;
+        db.ref(`timers/${user}`).set({
+          timeLeft: 60,
+          isPaused: false
+        });
+      }
+    });
+  });
+
+  pauseAllBtn.onclick = () => {
+    allPaused = !allPaused;
+    db.ref("timers").once("value").then(snap => {
+      const timers = snap.val() || {};
+      for(const user in timers) {
+        db.ref(`timers/${user}/isPaused`).set(allPaused);
+      }
+    });
+    pauseAllBtn.textContent = allPaused ? "Старт всем" : "Пауза всем";
+  }
+}
