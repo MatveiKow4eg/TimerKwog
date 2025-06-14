@@ -19,128 +19,125 @@ function formatTime(seconds) {
   return `${m}:${s}`;
 }
 
-let currentNumber = null;
-let timerInterval = null;
-let timeExpiredNotified = false;
-
 function showTimerUI(num) {
-  currentNumber = num;
-  document.getElementById("userIdDisplay").textContent = num;
-  document.getElementById("userLabel").style.display = "block";
-  document.getElementById("userNumber").style.display = "none";
-  document.getElementById("startBtn").style.display = "none";
-  document.querySelector("h2").style.display = "none";
-  document.getElementById("timerContainer").style.display = "block";
+  const userLabel = document.getElementById("userLabel");
+  const userIdDisplay = document.getElementById("userIdDisplay");
+  const userNumberInput = document.getElementById("userNumber");
+  const startBtn = document.getElementById("startBtn");
+  const timerContainer = document.getElementById("timerContainer");
+
+  if (!userLabel || !userIdDisplay) return;
+
+  userLabel.style.display = "block";
+  userIdDisplay.textContent = num;
+  if (userNumberInput) userNumberInput.style.display = "none";
+  if (startBtn) startBtn.style.display = "none";
+  const heading = document.querySelector("h2");
+  if (heading) heading.style.display = "none";
+  timerContainer.style.display = "block";
 }
 
-function listenTimer() {
-  if (!currentNumber) return;
-  db.ref(`timers/${currentNumber}`).on("value", snap => {
-    const data = snap.val();
-    if (!data) return;
+// === Участник ===
+if (document.getElementById("startBtn")) {
+  const userNumberInput = document.getElementById("userNumber");
+  const startBtn = document.getElementById("startBtn");
+  const timerDisplay = document.getElementById("timer");
 
-    document.getElementById("timer").textContent = formatTime(data.timeLeft);
+  let timerInterval = null;
+  let currentNumber = null;
+  let timeExpiredNotified = false;
 
-    clearInterval(timerInterval);
-    if (!data.isPaused) {
-      timerInterval = setInterval(() => {
-        db.ref(`timers/${currentNumber}`).transaction(timer => {
-          if (timer && timer.timeLeft > 0) timer.timeLeft--;
-          return timer;
-        });
-      }, 1000);
-    }
+  const savedNumber = localStorage.getItem("userNumber");
 
-    if (data.timeLeft === 0 && !timeExpiredNotified) {
-      timeExpiredNotified = true;
-      alert("⏰ Время вышло!");
-    }
-  });
-}
+  window.onload = function () {
+    if (savedNumber) autoStart(savedNumber);
+  };
 
-function autoStart(num) {
-  db.ref("timers").once("value").then(all => {
-    const allTimers = all.val() || {};
-
-    // Проверка: если номер отсутствует, возможно был переименован
-    if (!allTimers[num]) {
-      const renamed = Object.entries(allTimers).find(([_, val]) => val.renamedTo === num);
-      if (renamed) {
-        const [newNum] = renamed;
-        localStorage.setItem("userNumber", newNum);
-        currentNumber = newNum;
-        showTimerUI(newNum);
-        listenTimer();
-        watchRename(newNum);
-        return;
-      }
-
-      // Реально удалён
-      alert("Этот номер был удалён.");
-      localStorage.removeItem("userNumber");
+  startBtn.onclick = () => {
+    const num = userNumberInput.value.trim();
+    if (!/^[0-9]+$/.test(num) || parseInt(num) < 1 || parseInt(num) > 60) {
+      alert("Введите номер от 1 до 60!");
       return;
     }
 
-    currentNumber = num;
-    showTimerUI(num);
-    listenTimer();
-    watchRename(num);
-  });
-}
-
-function watchRename(num) {
-  db.ref(`timers/${num}`).on("value", snap => {
-    const data = snap.val();
-    if (!data) return;
-
-    if (data.renamedTo && data.renamedTo !== num) {
-      db.ref(`timers/${num}/renamedTo`).remove();
-      localStorage.setItem("userNumber", data.renamedTo);
-      currentNumber = data.renamedTo;
-      showTimerUI(currentNumber);
-      listenTimer();
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("userNumber");
-  if (saved) autoStart(saved);
-
-  const startBtn = document.getElementById("startBtn");
-  if (startBtn) {
-    startBtn.onclick = () => {
-      const userNumberInput = document.getElementById("userNumber");
-      const num = userNumberInput.value.trim();
-      if (!/^[0-9]+$/.test(num) || parseInt(num) < 1 || parseInt(num) > 60) {
-        alert("Введите номер от 1 до 60!");
+    db.ref("timers").once("value").then(all => {
+      const allTimers = all.val() || {};
+      if (Object.keys(allTimers).length >= 60) {
+        alert("Максимум 60 участников!");
         return;
       }
 
-      db.ref("timers").once("value").then(all => {
-        const allTimers = all.val() || {};
-        if (Object.keys(allTimers).length >= 60) {
-          alert("Максимум 60 участников!");
-          return;
-        }
+      if (allTimers[num]) {
+        alert("Этот номер уже используется!");
+        return;
+      }
 
-        if (allTimers[num]) {
-          alert("Этот номер уже используется!");
-          return;
-        }
+      currentNumber = num;
+      localStorage.setItem("userNumber", num);
 
-        currentNumber = num;
-        localStorage.setItem("userNumber", num);
-
-        db.ref(`timers/${num}`).set({
-          timeLeft: 600,
-          isPaused: true
-        });
-
-        showTimerUI(num);
-        listenTimer();
-        watchRename(num);
+      db.ref(`timers/${num}`).set({
+        timeLeft: 600,
+        isPaused: true
       });
-    };
+
+      showTimerUI(num);
+      listenTimer();
+    });
+  };
+
+  function autoStart(num) {
+    currentNumber = num;
+    db.ref("timers").once("value").then(all => {
+      const allTimers = all.val() || {};
+      if (!allTimers[num]) {
+        const match = Object.entries(allTimers).find(([_, val]) => val.renamedTo === num);
+        if (match) {
+          const [newNum] = match;
+          localStorage.setItem("userNumber", newNum);
+          location.reload();
+          return;
+        }
+        alert("Этот номер удалён администратором.");
+        localStorage.removeItem("userNumber");
+        location.reload();
+        return;
+      }
+
+      showTimerUI(num);
+      listenTimer();
+
+      db.ref(`timers/${num}`).on("value", (snap) => {
+        const data = snap.val();
+        if (data && data.renamedTo && data.renamedTo !== num) {
+          localStorage.setItem("userNumber", data.renamedTo);
+          db.ref(`timers/${num}/renamedTo`).remove();
+          location.reload();
+        }
+      });
+    });
   }
-});
+
+  function listenTimer() {
+    db.ref(`timers/${currentNumber}`).on("value", snap => {
+      const data = snap.val();
+      if (!data) return;
+      timerDisplay.textContent = formatTime(data.timeLeft);
+
+      clearInterval(timerInterval);
+
+      if (!data.isPaused) {
+        timerInterval = setInterval(() => {
+          db.ref(`timers/${currentNumber}`).transaction(timer => {
+            if (timer && timer.timeLeft > 0) timer.timeLeft--;
+            return timer;
+          });
+        }, 1000);
+      }
+
+      if (data.timeLeft === 0 && !timeExpiredNotified) {
+        timeExpiredNotified = true;
+        alert("⏰ Время вышло!");
+      }
+    });
+  }
+}
