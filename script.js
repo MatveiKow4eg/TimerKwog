@@ -1,15 +1,14 @@
-// Твои Firebase-конфиги, вставь сюда свои реальные данные
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDxYwWxD_f8e19HwxVqx7McqdE1miW7j5I",
   authDomain: "kwog-24c4c.firebaseapp.com",
-  **databaseURL: "https://kwog-24c4c-default-rtdb.europe-west1.firebasedatabase.app",**
+  databaseURL: "https://kwog-24c4c-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "kwog-24c4c",
   storageBucket: "kwog-24c4c.appspot.com",
   messagingSenderId: "75932550486",
   appId: "1:75932550486:web:7a831988dfdf6d6ef542f7",
   measurementId: "G-860L10K2NS"
 };
+
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
