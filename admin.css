@@ -40,6 +40,26 @@ h2 {
   flex: 1;
 }
 
+#pauseAllBtn {
+  margin-top: 24px;
+  padding: 10px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 30px;
+  background: linear-gradient(to right, #00f2fe, #4facfe);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(79, 172, 254, 0.3);
+  transition: all 0.3s ease;
+}
+
+#pauseAllBtn:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 18px rgba(79, 172, 254, 0.5);
+}
+
+
 .card .info strong {
   font-size: 18px;
 }
