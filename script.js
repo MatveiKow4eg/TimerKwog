@@ -104,12 +104,15 @@ if(document.getElementById("usersTable")) {
     usersTable.innerHTML = "";
     for (const user in data) {
       const tr = document.createElement("tr");
+      const isPaused = data[user].isPaused;
+      const pauseText = isPaused ? "▶" : "⏸";
       tr.innerHTML = `
         <td>${user}</td>
         <td>${formatTime(data[user].timeLeft)}</td>
         <td>
           <button class="delete" data-user="${user}">Удалить</button>
           <button class="rename" data-user="${user}">Переименовать</button>
+          <button class="pause" data-user="${user}">${pauseText}</button>
           <button class="add30" data-user="${user}">+30 сек</button>
           <button class="sub30" data-user="${user}">-30 сек</button>
           <button class="reset" data-user="${user}">Сброс</button>
@@ -148,6 +151,16 @@ if(document.getElementById("usersTable")) {
             db.ref(`timers/${newUser}`).set(data);
             db.ref(`timers/${oldUser}`).remove();
           });
+        });
+      };
+    });
+
+    document.querySelectorAll(".pause").forEach(btn => {
+      btn.onclick = () => {
+        const user = btn.dataset.user;
+        db.ref(`timers/${user}/isPaused`).once("value").then(snap => {
+          const current = snap.val();
+          db.ref(`timers/${user}/isPaused`).set(!current);
         });
       };
     });
