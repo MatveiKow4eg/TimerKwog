@@ -28,6 +28,11 @@ if(document.getElementById("startBtn")) {
   let timerInterval = null;
   let currentNumber = null;
 
+  const savedNumber = localStorage.getItem("userNumber");
+  if (savedNumber) {
+    autoStart(savedNumber);
+  }
+
   startBtn.onclick = () => {
     const num = userNumberInput.value.trim();
     if (!/^\d+$/.test(num)) {
@@ -40,34 +45,32 @@ if(document.getElementById("startBtn")) {
       return;
     }
 
+    autoStart(num);
+  };
+
+  function autoStart(num) {
     currentNumber = num;
+    localStorage.setItem("userNumber", num);
 
     db.ref("timers").once("value").then(all => {
       const allTimers = all.val() || {};
-      if (Object.keys(allTimers).length >= 60) {
-        alert("Максимум 60 участников уже добавлено!");
-        return;
-      }
-
-      db.ref(`timers/${currentNumber}`).once("value").then(snapshot => {
-        if (snapshot.exists()) {
-          alert("Этот номер уже используется!");
+      if (!allTimers[num]) {
+        if (Object.keys(allTimers).length >= 60) {
+          alert("Максимум 60 участников уже добавлено!");
           return;
         }
-
-        timerContainer.style.display = "block";
-        startBtn.disabled = true;
-        userNumberInput.disabled = true;
-
-        db.ref(`timers/${currentNumber}`).set({
+        db.ref(`timers/${num}`).set({
           timeLeft: 600,
           isPaused: true
         });
+      }
 
-        listenTimer();
-      });
+      timerContainer.style.display = "block";
+      startBtn.disabled = true;
+      userNumberInput.disabled = true;
+      listenTimer();
     });
-  };
+  }
 
   function listenTimer() {
     db.ref(`timers/${currentNumber}`).on("value", snap => {
