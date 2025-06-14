@@ -112,6 +112,38 @@ if(document.getElementById("usersTable")) {
     }
 
     // Навешиваем обработчики на кнопки
+    document.querySelectorAll(".delete").forEach(btn => {
+  btn.onclick = () => {
+    const user = btn.dataset.user;
+    db.ref(`timers/${user}`).remove();
+  }
+});
+
+document.querySelectorAll(".rename").forEach(btn => {
+  btn.onclick = () => {
+    const oldUser = btn.dataset.user;
+    const newUser = prompt("Введите новый номер (1–60):", oldUser);
+
+    if (!/^\d+$/.test(newUser) || parseInt(newUser) < 1 || parseInt(newUser) > 60) {
+      alert("Недопустимый номер!");
+      return;
+    }
+
+    db.ref(`timers/${newUser}`).once("value").then(snap => {
+      if (snap.exists()) {
+        alert("Такой номер уже используется!");
+        return;
+      }
+
+      db.ref(`timers/${oldUser}`).once("value").then(dataSnap => {
+        const data = dataSnap.val();
+        db.ref(`timers/${newUser}`).set(data);
+        db.ref(`timers/${oldUser}`).remove();
+      });
+    });
+  };
+});
+
     document.querySelectorAll(".add30").forEach(btn => {
       btn.onclick = () => {
         const user = btn.dataset.user;
