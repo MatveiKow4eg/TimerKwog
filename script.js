@@ -84,47 +84,51 @@ function autoStart(num) {
 
   db.ref("timers").once("value").then(all => {
     const allTimers = all.val() || {};
-  if (!allTimers[num]) {
-  // ⚠ номер удалён — ищем, может он переехал в renamedTo
-  const possibleNew = Object.entries(allTimers).find(([key, value]) => value.renamedTo === num);
-  if (possibleNew) {
-    const [newNum] = possibleNew;
-    console.log(`Переход с ${num} → ${newNum} (по renamedTo)`);
-    localStorage.setItem("userNumber", newNum);
-    location.reload();
-    return;
-  }
 
-  // 💥 если ничего не найдено — реально удалён
-  alert("Этот номер был удалён администратором.");
-  localStorage.removeItem("userNumber");
-  location.reload();
-  return;
-}
+    // ✅ Если таймера уже нет — возможно, нас переименовали
+    if (!allTimers[num]) {
+      // Ищем по всей базе: кто был переименован в num
+      const match = Object.entries(allTimers).find(
+        ([_, value]) => value.renamedTo === num
+      );
 
-    // 👇 Показываем номер, скрываем ввод
+      if (match) {
+        const [newNum] = match;
+        console.log(`Восстановление: ${num} → ${newNum}`);
+        localStorage.setItem("userNumber", newNum);
+        location.reload();
+        return;
+      }
+
+      // 💥 Реально удалён
+      alert("Этот номер был удалён администратором.");
+      localStorage.removeItem("userNumber");
+      location.reload();
+      return;
+    }
+
+    // 👇 Показываем номер, скрываем форму
     document.getElementById("userLabel").style.display = "block";
     document.getElementById("userIdDisplay").textContent = num;
     userNumberInput.style.display = "none";
     startBtn.style.display = "none";
     document.querySelector("h2").style.display = "none";
+
     timerContainer.style.display = "block";
-
     listenTimer();
-  });
 
-  // 👂 Слушаем изменения — вдруг переименовали
-  db.ref(`timers/${num}`).on("value", snap => {
-    const data = snap.val();
-    if (!data) return;
-
-    if (data.renamedTo && data.renamedTo !== num) {
-      console.log(`Переименование: ${num} → ${data.renamedTo}`);
-      localStorage.setItem("userNumber", data.renamedTo);
-      location.reload();
-    }
+    // ✅ Также следим: может переименуют прямо сейчас
+    db.ref(`timers/${num}`).on("value", (snap) => {
+      const data = snap.val();
+      if (data && data.renamedTo && data.renamedTo !== num) {
+        console.log(`Переименование в реальном времени: ${num} → ${data.renamedTo}`);
+        localStorage.setItem("userNumber", data.renamedTo);
+        location.reload();
+      }
+    });
   });
 }
+
 
 
 
