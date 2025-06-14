@@ -63,16 +63,21 @@ if(document.getElementById("startBtn")) {
       currentNumber = num;
       localStorage.setItem("userNumber", num);
 
-      db.ref(`timers/${}num}`).set({
-        timeLeft: 600,
-        isPaused: true
-      });
+     db.ref("timers").once("value").then(all => {
+  const allTimers = all.val() || {};
+  if (!allTimers[num]) {
+    alert("Этот номер был удалён администратором.");
+    localStorage.removeItem("userNumber");
+    location.reload();
+    return;
+  }
 
-      timerContainer.style.display = "block";
-      startBtn.disabled = true;
-      userNumberInput.disabled = true;
-      listenTimer();
-    });
+  timerContainer.style.display = "block";
+  startBtn.disabled = true;
+  userNumberInput.disabled = true;
+  listenTimer();
+});
+
   };
 
   function autoStart(num) {
