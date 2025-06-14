@@ -193,8 +193,8 @@ if(document.getElementById("usersTable")) {
       btn.onclick = () => {
         const user = btn.dataset.user;
         db.ref(`timers/${user}`).set({
-          timeLeft: 60,
-          isPaused: false
+          timeLeft: 600,
+          isPaused: true
         });
       };
     });
