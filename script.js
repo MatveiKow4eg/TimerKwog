@@ -100,11 +100,11 @@ if (document.getElementById("startBtn")) {
       listenTimer();
 
       db.ref(`timers/${num}`).on("value", (snap) => {
-        const data = snap.val();
-        if (data?.renamedTo) {
-          if (localStorage.getItem("userNumber") !== data.renamedTo) {
-            localStorage.setItem("userNumber", data.renamedTo);
-            location.reload();
+  const data = snap.val();
+  if (data && data.renamedTo && data.renamedTo !== num) {
+    localStorage.setItem("userNumber", data.renamedTo);
+    db.ref(`timers/${num}/renamedTo`).remove(); // Удаляем поле, чтобы избежать повторных обновлений
+    location.reload();
           } else {
             db.ref(`timers/${num}/renamedTo`).remove();
           }
