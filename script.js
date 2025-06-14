@@ -122,18 +122,24 @@ db.ref(`timers/${num}`).on("value", (snap) => {
   const data = snap.val();
   if (!data) return;
 
-  if (data.renamedTo && data.renamedTo === num) {
-    // 🔁 Мы уже на новом номере, но осталось поле переименования → удалим
-    db.ref(`timers/${num}/renamedTo`).remove();
-  }
+  if (data.renamedTo) {
+    const currentStored = localStorage.getItem("userNumber");
 
-  else if (data.renamedTo && data.renamedTo !== num) {
-    // ✅ Нас переименовали — сохраним и перезапустим
-    console.log(`Переименование в реальном времени: ${num} → ${data.renamedTo}`);
+    // если renamedTo совпадает с текущим localStorage, мы уже на новом номере
+    if (data.renamedTo === currentStored) {
+      // очистим, чтобы не повторялось
+      db.ref(`timers/${num}/renamedTo`).remove();
+      console.log("✅ renamedTo очищен, участник уже переехал.");
+      return;
+    }
+
+    // иначе — это новое переназначение
+    console.log(`Переименование: ${num} → ${data.renamedTo}`);
     localStorage.setItem("userNumber", data.renamedTo);
     location.reload();
   }
 });
+
 
   });
 }
