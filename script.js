@@ -27,6 +27,7 @@ if(document.getElementById("startBtn")) {
 
   let timerInterval = null;
   let currentNumber = null;
+  let timeExpiredNotified = false;
 
   const savedNumber = localStorage.getItem("userNumber");
   if (savedNumber) {
@@ -111,6 +112,11 @@ if(document.getElementById("startBtn")) {
         }, 1000);
       } else {
         clearInterval(timerInterval);
+      }
+
+      if (data.timeLeft === 0 && !timeExpiredNotified) {
+        timeExpiredNotified = true;
+        alert("⏰ Время вышло!");
       }
     });
   }
