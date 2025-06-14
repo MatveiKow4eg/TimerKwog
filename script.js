@@ -29,27 +29,38 @@ if(document.getElementById("startBtn")) {
   let timerInterval = null;
   let currentNumber = null;
 
-  startBtn.onclick = () => {
-    const num = userNumberInput.value.trim();
-    if(!/^\d+$/.test(num)) {
-      alert("Только цифры!");
+ startBtn.onclick = () => {
+  const num = userNumberInput.value.trim();
+  if (!/^\d+$/.test(num)) {
+    alert("Только цифры!");
+    return;
+  }
+
+  if (parseInt(num) < 1 || parseInt(num) > 60) {
+    alert("Можно вводить только номер от 1 до 60!");
+    return;
+  }
+
+  currentNumber = num;
+  db.ref(`timers/${currentNumber}`).once("value").then(snapshot => {
+    if (snapshot.exists()) {
+      alert("Этот номер уже используется!");
       return;
     }
-    currentNumber = num;
+
+    // Запускаем
     timerContainer.style.display = "block";
     startBtn.disabled = true;
     userNumberInput.disabled = true;
 
-    // Создаем или получаем таймер из базы
-    db.ref(`timers/${currentNumber}`).once("value").then(snapshot => {
-      if(!snapshot.exists()) {
-        db.ref(`timers/${currentNumber}`).set({
-          timeLeft: 60,  // стартовое время 60 секунд
-          isPaused: false
-        });
-      }
-      listenTimer();
+    db.ref(`timers/${currentNumber}`).set({
+      timeLeft: 60,
+      isPaused: false
     });
+
+    listenTimer();
+  });
+};
 
     function listenTimer() {
       db.ref(`timers/${currentNumber}`).on("value", snap => {
