@@ -15,7 +15,6 @@
       color: white;
       overflow: hidden;
     }
-
 .background-image {
   position: fixed;
   top: 0;
@@ -23,21 +22,15 @@
   width: 100vw;
   height: 100vh;
   object-fit: cover;
-  z-index: -1;
-  opacity: 0.2; /* или 1 для полной яркости */
+  z-index: 0; /* Не -1! */
+  opacity: 0.3;
   pointer-events: none;
 }
 
-    .container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
-      z-index: 1;
-    }
-
+.container {
+  position: relative; /* ВАЖНО! */
+  z-index: 1;
+}
     .logo {
       width: 160px;
       height: 160px;
