@@ -2,29 +2,28 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>КОВЧЕГ — Космический Таймер</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="space-bg">
-    <img src="kovcheg-logo.png" alt="КОВЧЕГ" class="logo" />
-    <h1 class="title">КОВЧЕГ</h1>
-    <h2 class="subtitle">Космический лагерь</h2>
-
-    <div id="inputBlock">
-      <p>Введи свой номер</p>
-      <input type="text" id="userNumber" placeholder="например: 17" />
-      <button id="startBtn">🚀 Запустить таймер</button>
-    </div>
-
-    <div id="timerContainer" style="display:none;">
-      <div id="userLabel">НОМЕР — <span id="userIdDisplay"></span></div>
-      <div class="timer-label">Твой таймер:</div>
-      <div id="timer">10:00</div>
+  <div class="background">
+    <div class="overlay"></div>
+    <div class="container">
+      <img src="kovcheg-logo.png" class="logo" alt="Логотип КОВЧЕГ">
+      <h1>КОВЧЕГ</h1>
+      <div id="inputBlock">
+        <p>Введи свой номер</p>
+        <input type="text" id="userNumber" placeholder="например: 17" />
+        <button id="startBtn">🚀 НАЧАТЬ ТАЙМЕР</button>
+      </div>
+      <div id="timerContainer" style="display:none;">
+        <h2 id="userLabel">НОМЕР — <span id="userIdDisplay"></span></h2>
+        <p>ТВОЙ ТАЙМЕР:</p>
+        <div id="timer">10:00</div>
+      </div>
     </div>
   </div>
-
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script src="script.js"></script>
