@@ -91,26 +91,30 @@ function autoStart(num) {
       return;
     }
 
-    // 👇 Показываем номер, скрываем форму
+    // 👇 Показываем номер, скрываем ввод
     document.getElementById("userLabel").style.display = "block";
     document.getElementById("userIdDisplay").textContent = num;
     userNumberInput.style.display = "none";
     startBtn.style.display = "none";
     document.querySelector("h2").style.display = "none";
-
     timerContainer.style.display = "block";
+
     listenTimer();
   });
 
-  // ✅ Следим за переименованием
-  db.ref(`timers/${num}`).on("value", (snap) => {
+  // 👂 Слушаем изменения — вдруг переименовали
+  db.ref(`timers/${num}`).on("value", snap => {
     const data = snap.val();
-    if (data && data.renamedTo && data.renamedTo !== num) {
+    if (!data) return;
+
+    if (data.renamedTo && data.renamedTo !== num) {
+      console.log(`Переименование: ${num} → ${data.renamedTo}`);
       localStorage.setItem("userNumber", data.renamedTo);
-      location.reload(); // автоматически подключится к новому номеру
+      location.reload();
     }
   });
 }
+
 
 
   function listenTimer() {
