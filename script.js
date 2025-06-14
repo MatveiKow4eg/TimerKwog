@@ -45,7 +45,31 @@ if(document.getElementById("startBtn")) {
       return;
     }
 
-    autoStart(num);
+    db.ref("timers").once("value").then(all => {
+      const allTimers = all.val() || {};
+      if (Object.keys(allTimers).length >= 60) {
+        alert("Максимум 60 участников уже добавлено!");
+        return;
+      }
+
+      if (allTimers[num]) {
+        alert("Этот номер уже используется!");
+        return;
+      }
+
+      currentNumber = num;
+      localStorage.setItem("userNumber", num);
+
+      db.ref(`timers/${num}`).set({
+        timeLeft: 600,
+        isPaused: true
+      });
+
+      timerContainer.style.display = "block";
+      startBtn.disabled = true;
+      userNumberInput.disabled = true;
+      listenTimer();
+    });
   };
 
   function autoStart(num) {
@@ -54,16 +78,11 @@ if(document.getElementById("startBtn")) {
 
     db.ref("timers").once("value").then(all => {
       const allTimers = all.val() || {};
-   if (!allTimers[num]) {
-  alert("Этот номер был удалён администратором.");
-  localStorage.removeItem("userNumber");
-  location.reload();
-  return;
-}
-        db.ref(`timers/${num}`).set({
-          timeLeft: 600,
-          isPaused: true
-        });
+      if (!allTimers[num]) {
+        alert("Этот номер был удалён администратором.");
+        localStorage.removeItem("userNumber");
+        location.reload();
+        return;
       }
 
       timerContainer.style.display = "block";
