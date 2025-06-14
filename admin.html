@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Админ Панель</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: center; }
+    button { margin: 0 2px; }
+  </style>
+</head>
+<body>
+  <h2>Панель администратора</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Номер</th>
+        <th>Таймер</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody id="usersTable"></tbody>
+  </table>
+
+  <button id="pauseAllBtn">Пауза / Старт всем</button>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
