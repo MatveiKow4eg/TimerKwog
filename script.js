@@ -118,14 +118,23 @@ function autoStart(num) {
     listenTimer();
 
     // ✅ Также следим: может переименуют прямо сейчас
-    db.ref(`timers/${num}`).on("value", (snap) => {
-      const data = snap.val();
-      if (data && data.renamedTo && data.renamedTo !== num) {
-        console.log(`Переименование в реальном времени: ${num} → ${data.renamedTo}`);
-        localStorage.setItem("userNumber", data.renamedTo);
-        location.reload();
-      }
-    });
+db.ref(`timers/${num}`).on("value", (snap) => {
+  const data = snap.val();
+  if (!data) return;
+
+  if (data.renamedTo && data.renamedTo === num) {
+    // 🔁 Мы уже на новом номере, но осталось поле переименования → удалим
+    db.ref(`timers/${num}/renamedTo`).remove();
+  }
+
+  else if (data.renamedTo && data.renamedTo !== num) {
+    // ✅ Нас переименовали — сохраним и перезапустим
+    console.log(`Переименование в реальном времени: ${num} → ${data.renamedTo}`);
+    localStorage.setItem("userNumber", data.renamedTo);
+    location.reload();
+  }
+});
+
   });
 }
 
