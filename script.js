@@ -54,11 +54,12 @@ if(document.getElementById("startBtn")) {
 
     db.ref("timers").once("value").then(all => {
       const allTimers = all.val() || {};
-      if (!allTimers[num]) {
-        if (Object.keys(allTimers).length >= 60) {
-          alert("Максимум 60 участников уже добавлено!");
-          return;
-        }
+   if (!allTimers[num]) {
+  alert("Этот номер был удалён администратором.");
+  localStorage.removeItem("userNumber");
+  location.reload();
+  return;
+}
         db.ref(`timers/${num}`).set({
           timeLeft: 600,
           isPaused: true
