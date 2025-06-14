@@ -16,14 +16,15 @@
       overflow: hidden;
     }
 
-    .background-svg {
+    .background-image {
       position: fixed;
       top: 0;
       left: 0;
       width: 100vw;
       height: 100vh;
+      object-fit: cover;
       z-index: -1;
-      opacity: 0.15;
+      opacity: 1; /* убедимся, что оно видно */
       pointer-events: none;
     }
 
@@ -93,8 +94,8 @@
   </style>
 </head>
 <body>
-  <img src="space-background-colored.svg" class="background-svg" alt="background" />
-
+  <!-- 💫 Бэкграунд с планетами -->
+  <img src="space-background-colored.svg" alt="Космос" class="background-image" />
 
   <div class="container">
     <object data="kovcheg-logo.svg" type="image/svg+xml" class="logo"></object>
@@ -110,6 +111,7 @@
       <div id="timer">10:00</div>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
