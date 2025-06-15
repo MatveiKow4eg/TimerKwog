@@ -1,0 +1,17 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Таймер участника</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1 id="title" style="text-align:center; margin-top: 50px;"></h1>
+  <script>
+    const match = window.location.pathname.match(/number-(\d+)\.html/);
+    const number = match ? match[1] : "?";
+    document.getElementById("title").textContent = `Таймер участника №${number}`;
+  </script>
+</body>
+</html>
