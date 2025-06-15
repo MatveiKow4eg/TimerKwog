@@ -84,15 +84,6 @@
     button:hover {
       background: #7df9ff;
     }
-
-    #timerContainer {
-      margin-top: 20px;
-    }
-
-    #timer {
-      font-size: 64px;
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
@@ -103,28 +94,16 @@
     <h1>КОВЧЕГ</h1>
     <div id="inputBlock">
       <p>Введи свой номер</p>
-      <input type="text" id="userNumber" placeholder="например: 17" />
-      <button id="startBtn">🚀 НАЧАТЬ ТАЙМЕР</button>
-    </div>
-    <div id="timerContainer" style="display:none;">
-      <h2 id="userLabel">НОМЕР — <span id="userIdDisplay"></span></h2>
-      <p>ТВОЙ ТАЙМЕР:</p>
-      <div id="timer">10:00</div>
+      <input type="number" id="participantNumber" min="1" max="60" placeholder="например: 17" />
+      <button onclick="redirectToTimer()">🚀 НАЧАТЬ ТАЙМЕР</button>
     </div>
   </div>
 
-  <!-- ✅ Firebase v8 (старая версия, подходит для твоего кода) -->
+  <!-- ✅ Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-
-
-    <div style="text-align: center; margin-top: 50px;">
-      <input type="number" id="participantNumber" min="1" max="60" placeholder="Введите номер от 1 до 60" />
-      <button onclick="redirectToTimer()">Начать</button>
-      
-    </div>
-      <!-- ✅ Твой основной скрипт -->
+  <!-- ✅ Скрипт с redirectToTimer -->
   <script src="script.js"></script>
 </body>
 </html>
